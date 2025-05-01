@@ -1,7 +1,14 @@
 #include <stdio.h>
+#include "raylib.h"
 
 int main(void)
 {
-    printf("Hello World\n");
+    InitWindow(800, 600, "k-means");
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RED);
+        EndDrawing();
+    }
+    CloseWindow();
     return 0;
 }
