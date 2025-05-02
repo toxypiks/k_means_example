@@ -12,9 +12,11 @@ Vector2 project_sample_to_screen(Vector2 sample)
     // -20..20 => 0..40 => 0..1
     float nx = (sample.x - MIN_X)/(MAX_X - MIN_X);
     float ny = (sample.y - MIN_Y)/(MAX_Y - MIN_Y);
+    float w = GetScreenWidth();
+    float h = GetScreenHeight();
     return CLITERAL(Vector2) {
-        .x = GetScreenWidth()*nx,
-        .y = GetScreenHeight() - (GetScreenHeight()*ny),
+        .x = w*nx,
+        .y = h - (h*ny),
     };
 }
 
