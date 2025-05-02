@@ -14,7 +14,7 @@ Vector2 project_sample_to_screen(Vector2 sample)
     float ny = (sample.y - MIN_Y)/(MAX_Y - MIN_Y);
     return CLITERAL(Vector2) {
         .x = GetScreenWidth()*nx,
-        .y = GetScreenHeight()*ny,
+        .y = GetScreenHeight() - (GetScreenHeight()*ny),
     };
 }
 
@@ -24,7 +24,8 @@ int main(void)
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(GetColor(0x181818AA));
-        DrawCircle(GetScreenWidth()/2, GetScreenHeight()/2, 30, RED);
+        Vector2 sample = {-10, -10};
+        DrawCircleV(project_sample_to_screen(sample), 10, RED);
         EndDrawing();
     }
     CloseWindow();
