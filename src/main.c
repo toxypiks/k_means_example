@@ -3,6 +3,7 @@
 #include "raymath.h"
 #include <math.h>
 #include <time.h>
+#include <float.h>
 
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
@@ -52,7 +53,7 @@ static void generate_cluster(Vector2 center, float radius, size_t count, Vector2
     }
 }
 
-static Vector2 clusters[K] = {0};
+static Vector2 *clusters[K] = {0};
 static Vector2 means[K] = {0};
 static Color colors[] = {
     PINK,
@@ -86,6 +87,24 @@ int main(void)
         means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
     }
 
+    for (size_t j = 0; j < K; ++j) {
+        arrsetlen(clusters[j], 0);
+    }
+
+    for (size_t i = 0; i < arrlen(set); ++i) {
+        Vector2 p = set[i];
+        int k = -1;
+        float s = FLT_MAX;
+        for (size_t j = 0; j < K; ++j) {
+            Vector2 m = means[j];
+            float sm = Vector2LengthSqr(Vector2Subtract(p, m));
+            if (sm < s) {
+                s = sm;
+                k = j;
+            }
+        }
+        arrput(clusters[k], p);
+    }
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
             arrsetlen(set, 0);
@@ -105,8 +124,14 @@ int main(void)
             DrawCircleV(project_sample_to_screen(it), SAMPLE_RADIUS, RED);
         }
         for (size_t i = 0; i < K; ++i) {
-            Vector2 it = means[i];
-            DrawCircleV(project_sample_to_screen(it), MEAN_RADIUS, colors[i%(ARRAY_LEN(colors))]);
+            Color color = colors[i%(ARRAY_LEN(colors))];
+
+            for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
+                Vector2 it = clusters[i][j];
+                DrawCircleV(project_sample_to_screen(it), SAMPLE_RADIUS, color);
+            }
+
+            DrawCircleV(project_sample_to_screen(means[i]), MEAN_RADIUS, color);
         }
         EndDrawing();
     }
