@@ -33,6 +33,7 @@ static Vector2 project_sample_to_screen(Vector2 sample)
 // function to return float number between 0 and 1
 static inline float rand_float(void)
 {
+    // random value between 0 and 1
     return (float)rand()/RAND_MAX;
 }
 
@@ -40,17 +41,16 @@ static void generate_cluster(Vector2 center, float radius, size_t count, Vector2
 {
     for (size_t i = 0; i < count; ++i) {
         float angle = rand_float()*2*PI;
-        float mag = rand_float();
+        float mag = pow(1.0 - rand_float(),4);
         Vector2 sample = {
             .x = center.x + cosf(angle)*mag*radius,
             .y = center.y + sinf(angle)*mag*radius,
         };
         arrput(*samples, sample);
-
     }
 }
 
-static Vector2 *clusters[K] = {0};
+static Vector2 clusters[K] = {0};
 static Vector2 means[K] = {0};
 
 int main(void)
@@ -63,16 +63,23 @@ int main(void)
     generate_cluster(CLITERAL(Vector2){0}, 10, 100, &set);
     generate_cluster(CLITERAL(Vector2){MIN_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
     generate_cluster(CLITERAL(Vector2){MAX_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
+
     for (size_t i = 0; i < K; ++i) {
         means[i].x = Lerp(MIN_X, MAX_X, rand_float());
         means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
     }
+
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
             arrsetlen(set, 0);
             generate_cluster(CLITERAL(Vector2){0}, 10, 100, &set);
             generate_cluster(CLITERAL(Vector2){MIN_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
             generate_cluster(CLITERAL(Vector2){MAX_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
+
+            for (size_t i = 0; i < K; ++i) {
+                means[i].x = Lerp(MIN_X, MAX_X, rand_float());
+                means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
+            }
         }
         BeginDrawing();
         ClearBackground(GetColor(0x181818AA));
