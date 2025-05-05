@@ -53,6 +53,7 @@ static void generate_cluster(Vector2 center, float radius, size_t count, Vector2
     }
 }
 
+Vector2 *set = NULL;
 static Vector2 *clusters[K] = {0};
 static Vector2 means[K] = {0};
 static Color colors[] = {
@@ -71,12 +72,9 @@ static Color colors[] = {
     BROWN,
 };
 
-int main(void)
+void generate_new_state(void)
 {
-    srand(time(0));
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "k-means");
-    Vector2 *set = NULL;
+    arrsetlen(set, 0);
     // generate random clusters for drawing
     generate_cluster(CLITERAL(Vector2){0}, 10, 100, &set);
     generate_cluster(CLITERAL(Vector2){MIN_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
@@ -86,6 +84,16 @@ int main(void)
         means[i].x = Lerp(MIN_X, MAX_X, rand_float());
         means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
     }
+
+}
+
+int main(void)
+{
+    srand(time(0));
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(800, 600, "k-means");
+
+    generate_new_state();
 
     for (size_t j = 0; j < K; ++j) {
         arrsetlen(clusters[j], 0);
@@ -107,15 +115,7 @@ int main(void)
     }
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
-            arrsetlen(set, 0);
-            generate_cluster(CLITERAL(Vector2){0}, 10, 100, &set);
-            generate_cluster(CLITERAL(Vector2){MIN_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
-            generate_cluster(CLITERAL(Vector2){MAX_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
-
-            for (size_t i = 0; i < K; ++i) {
-                means[i].x = Lerp(MIN_X, MAX_X, rand_float());
-                means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
-            }
+            generate_new_state();
         }
         BeginDrawing();
         ClearBackground(GetColor(0x181818AA));
