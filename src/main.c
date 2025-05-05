@@ -16,6 +16,8 @@
 #define SAMPLE_RADIUS 4.0f
 #define MEAN_RADIUS (2*SAMPLE_RADIUS)
 
+#define ARRAY_LEN(xs) sizeof(xs)/sizeof(xs[0])
+
 // function to map sample value to screen
 static Vector2 project_sample_to_screen(Vector2 sample)
 {
@@ -52,6 +54,21 @@ static void generate_cluster(Vector2 center, float radius, size_t count, Vector2
 
 static Vector2 clusters[K] = {0};
 static Vector2 means[K] = {0};
+static Color colors[] = {
+    PINK,
+    YELLOW,
+    RED,
+    BLUE,
+    MAROON,
+    GREEN,
+    LIME,
+    SKYBLUE,
+    GOLD,
+    PURPLE,
+    VIOLET,
+    BEIGE,
+    BROWN,
+};
 
 int main(void)
 {
@@ -89,7 +106,7 @@ int main(void)
         }
         for (size_t i = 0; i < K; ++i) {
             Vector2 it = means[i];
-            DrawCircleV(project_sample_to_screen(it), MEAN_RADIUS, YELLOW);
+            DrawCircleV(project_sample_to_screen(it), MEAN_RADIUS, colors[i%(ARRAY_LEN(colors))]);
         }
         EndDrawing();
     }
