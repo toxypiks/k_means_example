@@ -87,14 +87,8 @@ void generate_new_state(void)
 
 }
 
-int main(void)
+void recluster_state(void)
 {
-    srand(time(0));
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "k-means");
-
-    generate_new_state();
-
     for (size_t j = 0; j < K; ++j) {
         arrsetlen(clusters[j], 0);
     }
@@ -113,9 +107,20 @@ int main(void)
         }
         arrput(clusters[k], p);
     }
+}
+
+int main(void)
+{
+    srand(time(0));
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(800, 600, "k-means");
+
+    generate_new_state();
+
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
             generate_new_state();
+            recluster_state();
         }
         BeginDrawing();
         ClearBackground(GetColor(0x181818AA));
