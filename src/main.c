@@ -109,6 +109,24 @@ void recluster_state(void)
     }
 }
 
+void update_means(void)
+{
+    for (size_t i = 0; i < K; ++i) {
+        if (arrlen(clusters[i]) > 0) {
+            means[i] = Vector2Zero();
+            for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
+                means[i] = Vector2Add(means[i], clusters[i][j]);
+            }
+            means[i].x /= arrlen(clusters[i]);
+            means[i].y /= arrlen(clusters[i]);
+        } else {
+            // if cluster is empty just regenerate mean
+            means[i].x = Lerp(MIN_X, MAX_X, rand_float());
+            means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
+        }
+    }
+}
+
 int main(void)
 {
     srand(time(0));
@@ -120,6 +138,10 @@ int main(void)
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
             generate_new_state();
+            recluster_state();
+        }
+        if (IsKeyPressed(KEY_SPACE)) {
+            update_means();
             recluster_state();
         }
         BeginDrawing();
