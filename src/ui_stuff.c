@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <rlgl.h>
 #include <stdlib.h>
+#include "data.h"
 
 #include "stb_ds.h"
 
@@ -107,38 +108,32 @@ static Color colors[] = {
 void widget(UiRect r, Color c) { DrawRectangle(r.x, r.y, r.w, r.h, c); }
 
 // function to map sample value to screen
-static Vector2 project_sample_to_screen(UiRect r, Vector2 sample)
+static Vector2 project_sample_to_screen(UiRect r, Vector2 sample, Limits limits)
 {
     // -20..20 => 0..40 => 0..1
-    float MIN_X = r.x;
-    float MAX_X = r.x + r.w;
-    float MIN_Y = r.y;
-    float MAX_Y = r.y + r.h;
-    float nx = (sample.x - MIN_X)/(MAX_X - MIN_X);
-    float ny = (sample.y - MIN_Y)/(MAX_Y - MIN_Y);
-    float w = GetScreenWidth();
-    float h = GetScreenHeight();
+    float nx = (sample.x - limits.min_x)/(limits.max_x - limits.min_x);
+    float ny = (sample.y - limits.min_y)/(limits.max_y - limits.min_y);
     return CLITERAL(Vector2) {
-        .x = w*nx,
-        .y = h - (h*ny),
+        .x = r.w*nx + r.x,
+        .y = r.h - (r.h*ny) + r.y,
     };
 }
 
-void cluster_widget(UiRect r, Vector2 *set, Vector2 *clusters[], Vector2 means[])
+void cluster_widget(UiRect r, Vector2 *set, Vector2 *clusters[], Vector2 means[], Limits limits)
 {
     for (size_t i = 0; i < arrlen(set); ++i) {
         Vector2 it = set[i];
-        DrawCircleV(project_sample_to_screen(r, it), SAMPLE_RADIUS, RED);
+        DrawCircleV(project_sample_to_screen(r, it, limits), SAMPLE_RADIUS, LIGHTGRAY);
     }
     for (size_t i = 0; i < 3; ++i) {
         Color color = colors[i%(ARRAY_LEN(colors))];
 
         for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
             Vector2 it = clusters[i][j];
-            DrawCircleV(project_sample_to_screen(r, it), SAMPLE_RADIUS, color);
+            DrawCircleV(project_sample_to_screen(r, it, limits), SAMPLE_RADIUS, color);
         }
 
-        DrawCircleV(project_sample_to_screen(r, means[i]), MEAN_RADIUS, color);
+        DrawCircleV(project_sample_to_screen(r, means[i], limits), MEAN_RADIUS, color);
     }
 }
 

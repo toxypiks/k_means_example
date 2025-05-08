@@ -26,6 +26,8 @@ target_link_libraries(main
 
 set(MAIN_WITH_WIDGETS_SRC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main_with_widgets.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/data.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/data.h
   )
 
 add_executable(main_with_widgets)

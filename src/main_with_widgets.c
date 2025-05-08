@@ -137,10 +137,10 @@ void update_means(void)
 int main(void)
 {
     const char *leaf_path = "../leaf/leaf.csv";
-    char *data = NULL;
-    size_t data_size = 0;
+    char *leaf_data = NULL;
+    size_t leaf_data_size = 0;
 
-    if (read_entire_file(leaf_path, (void**)&data, &data_size)) return 1;
+    if (read_entire_file(leaf_path, (void**)&leaf_data, &leaf_data_size)) return 1;
     srand(time(0));
 
     size_t window_factor = 80;
@@ -157,16 +157,20 @@ int main(void)
     float w = GetRenderWidth();
     float h = GetRenderHeight();
 
-    generate_new_state();
+    Data* data = NULL;
+    Limits limits = {-10,10, -10, 10};
+    gen_data(&data, 10, 4, limits);
+    // generate_new_state();
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
-            generate_new_state();
-            recluster_state();
+            free_data(&data);
+            gen_data(&data, 10, 4, limits);
+            // recluster_state();
         }
         if (IsKeyPressed(KEY_SPACE)) {
-            update_means();
-            recluster_state();
+            // update_means();
+            // recluster_state();
         }
         BeginDrawing();
         ClearBackground(GetColor(0x181818AA));
@@ -174,7 +178,7 @@ int main(void)
         layout_stack_push(&ls, LO_VERT, ui_rect(0, 0, w, h), 2, 0);
         layout_stack_push(&ls, LO_HORZ, layout_stack_slot(&ls), 2, 0);
         widget(layout_stack_slot(&ls), PINK);
-        cluster_widget(layout_stack_slot(&ls), set, clusters, means);
+        cluster_widget(layout_stack_slot(&ls), data->samples, clusters, means, limits);
         EndDrawing();
     }
     CloseWindow();
