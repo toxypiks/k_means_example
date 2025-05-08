@@ -5,6 +5,10 @@
 #include <time.h>
 #include <float.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
@@ -18,6 +22,39 @@
 #define MEAN_RADIUS (2*SAMPLE_RADIUS)
 
 #define ARRAY_LEN(xs) sizeof(xs)/sizeof(xs[0])
+
+int read_entire_file(const char *file_path, void **data, size_t *data_size)
+{
+    int fd = 0;
+    struct stat statbuf = {0};
+
+    fd = open(file_path, O_RDONLY, S_IRUSR | S_IRGRP);
+    if (fd == -1)
+    {
+        printf("failed to open %s\n", file_path);
+        exit(EXIT_FAILURE);
+    }
+
+    if (fstat(fd, &statbuf) == -1)
+    {
+        printf("failed to fstat %s\n", file_path);
+        exit(EXIT_FAILURE);
+    }
+
+    *data_size = statbuf.st_size;
+    if (close(fd) == -1)
+    {
+        printf("failed to fclose %s\n", file_path);
+        exit(EXIT_FAILURE);
+    }
+
+    FILE* fp = fopen(file_path, "rb");
+    *data = malloc(*data_size);
+    size_t read_bytes = fread(*data, 1, *data_size, fp);
+    printf("read_bytes: %zu\n", read_bytes);
+
+    if (fp) fclose(fp);
+}
 
 // function to map sample value to screen
 static Vector2 project_sample_to_screen(Vector2 sample)
@@ -129,6 +166,8 @@ void update_means(void)
 
 int main(void)
 {
+    const char *leaf_path = "leaf.csv";
+    char *sb = NULL;
     srand(time(0));
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "k-means");
