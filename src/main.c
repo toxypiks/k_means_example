@@ -166,8 +166,11 @@ void update_means(void)
 
 int main(void)
 {
-    const char *leaf_path = "leaf.csv";
-    char *sb = NULL;
+    const char *leaf_path = "../leaf/leaf.csv";
+    char *data = NULL;
+    size_t data_size = 0;
+
+    if (read_entire_file(leaf_path, (void**)&data, &data_size)) return 1;
     srand(time(0));
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "k-means");
