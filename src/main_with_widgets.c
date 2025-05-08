@@ -20,9 +20,6 @@
 #define MIN_Y -20.0
 #define MAX_Y 20.0
 
-#define SAMPLE_RADIUS 4.0f
-#define MEAN_RADIUS (2*SAMPLE_RADIUS)
-
 #define ARRAY_LEN(xs) sizeof(xs)/sizeof(xs[0])
 
 int read_entire_file(const char *file_path, void **data, size_t *data_size)
@@ -58,20 +55,6 @@ int read_entire_file(const char *file_path, void **data, size_t *data_size)
     if (fp) fclose(fp);
 }
 
-// function to map sample value to screen
-static Vector2 project_sample_to_screen(Vector2 sample)
-{
-    // -20..20 => 0..40 => 0..1
-    float nx = (sample.x - MIN_X)/(MAX_X - MIN_X);
-    float ny = (sample.y - MIN_Y)/(MAX_Y - MIN_Y);
-    float w = GetScreenWidth();
-    float h = GetScreenHeight();
-    return CLITERAL(Vector2) {
-        .x = w*nx,
-        .y = h - (h*ny),
-    };
-}
-
 // function to return float number between 0 and 1
 static inline float rand_float(void)
 {
@@ -95,21 +78,6 @@ static void generate_cluster(Vector2 center, float radius, size_t count, Vector2
 Vector2 *set = NULL;
 static Vector2 *clusters[K] = {0};
 static Vector2 means[K] = {0};
-static Color colors[] = {
-    PINK,
-    YELLOW,
-    RED,
-    BLUE,
-    MAROON,
-    GREEN,
-    LIME,
-    SKYBLUE,
-    GOLD,
-    PURPLE,
-    VIOLET,
-    BEIGE,
-    BROWN,
-};
 
 void generate_new_state(void)
 {
@@ -202,23 +170,11 @@ int main(void)
         }
         BeginDrawing();
         ClearBackground(GetColor(0x181818AA));
-        /*for (size_t i = 0; i < arrlen(set); ++i) {
-            Vector2 it = set[i];
-            DrawCircleV(project_sample_to_screen(it), SAMPLE_RADIUS, RED);
-        }
-        for (size_t i = 0; i < K; ++i) {
-            Color color = colors[i%(ARRAY_LEN(colors))];
 
-            for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
-                Vector2 it = clusters[i][j];
-                DrawCircleV(project_sample_to_screen(it), SAMPLE_RADIUS, color);
-            }
-
-            DrawCircleV(project_sample_to_screen(means[i]), MEAN_RADIUS, color);
-        }*/
         layout_stack_push(&ls, LO_VERT, ui_rect(0, 0, w, h), 2, 0);
-        layout_stack_push(&ls, LO_HORZ, layout_stack_slot(&ls), 1, 0);
+        layout_stack_push(&ls, LO_HORZ, layout_stack_slot(&ls), 2, 0);
         widget(layout_stack_slot(&ls), PINK);
+        cluster_widget(layout_stack_slot(&ls), set, clusters, means);
         EndDrawing();
     }
     CloseWindow();

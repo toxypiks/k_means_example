@@ -4,6 +4,10 @@
 #include <rlgl.h>
 #include <stdlib.h>
 
+#include "stb_ds.h"
+
+#define ARRAY_LEN(xs) sizeof(xs)/sizeof(xs[0])
+
 UiRect ui_rect(float x, float y, float w, float h) {
   UiRect r = {0};
   r.x = x;
@@ -84,7 +88,59 @@ void layout_stack_delete(LayoutStack *ls){
     free(ls->items);
 }
 
+static Color colors[] = {
+    PINK,
+    YELLOW,
+    RED,
+    BLUE,
+    MAROON,
+    GREEN,
+    LIME,
+    SKYBLUE,
+    GOLD,
+    PURPLE,
+    VIOLET,
+    BEIGE,
+    BROWN,
+};
+
 void widget(UiRect r, Color c) { DrawRectangle(r.x, r.y, r.w, r.h, c); }
+
+// function to map sample value to screen
+static Vector2 project_sample_to_screen(UiRect r, Vector2 sample)
+{
+    // -20..20 => 0..40 => 0..1
+    float MIN_X = r.x;
+    float MAX_X = r.x + r.w;
+    float MIN_Y = r.y;
+    float MAX_Y = r.y + r.h;
+    float nx = (sample.x - MIN_X)/(MAX_X - MIN_X);
+    float ny = (sample.y - MIN_Y)/(MAX_Y - MIN_Y);
+    float w = GetScreenWidth();
+    float h = GetScreenHeight();
+    return CLITERAL(Vector2) {
+        .x = w*nx,
+        .y = h - (h*ny),
+    };
+}
+
+void cluster_widget(UiRect r, Vector2 *set, Vector2 *clusters[], Vector2 means[])
+{
+    for (size_t i = 0; i < arrlen(set); ++i) {
+        Vector2 it = set[i];
+        DrawCircleV(project_sample_to_screen(r, it), SAMPLE_RADIUS, RED);
+    }
+    for (size_t i = 0; i < 3; ++i) {
+        Color color = colors[i%(ARRAY_LEN(colors))];
+
+        for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
+            Vector2 it = clusters[i][j];
+            DrawCircleV(project_sample_to_screen(r, it), SAMPLE_RADIUS, color);
+        }
+
+        DrawCircleV(project_sample_to_screen(r, means[i]), MEAN_RADIUS, color);
+    }
+}
 
 UiStuff* create_ui_stuff(size_t screen_width, size_t screen_height){
   UiStuff* ui_stuff = (UiStuff*)malloc(sizeof(UiStuff));

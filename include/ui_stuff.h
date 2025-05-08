@@ -5,6 +5,9 @@
 #include <raymath.h>
 #include <stddef.h>
 
+#define SAMPLE_RADIUS 4.0f
+#define MEAN_RADIUS (2*SAMPLE_RADIUS)
+
 #define DA_INIT_CAP 256
 #define da_append(da, item)                                                      \
   do {                                                                           \
@@ -65,5 +68,5 @@ UiRect layout_slot_loc(Layout *l, const char *file_path, int line);
 void layout_stack_push(LayoutStack *ls, LayoutOrient orient, UiRect rect, size_t count, float gap);
 void layout_stack_delete(LayoutStack *ls);
 void widget(UiRect r, Color c);
-
+void cluster_widget(UiRect r, Vector2 *set, Vector2 *clusters[], Vector2 means[]);
 #endif // UI_STUFF_H
