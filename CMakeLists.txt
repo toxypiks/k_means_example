@@ -24,6 +24,22 @@ target_link_libraries(main
   ui_stuff
 )
 
+set(MAIN_WITH_WIDGETS_SRC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/main_with_widgets.c
+  )
+
+add_executable(main_with_widgets)
+target_sources(main_with_widgets
+ PRIVATE
+  ${MAIN_WITH_WIDGETS_SRC}
+)
+
+target_link_libraries(main_with_widgets
+  ${raylib_LIBRARIES}
+  m
+  ui_stuff
+)
+
 set(UI_STUFF_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ui_stuff.c
   ${CMAKE_CURRENT_SOURCE_DIR}/include/ui_stuff.h

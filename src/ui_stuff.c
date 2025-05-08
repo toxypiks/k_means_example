@@ -86,6 +86,13 @@ void layout_stack_delete(LayoutStack *ls){
 
 void widget(UiRect r, Color c) { DrawRectangle(r.x, r.y, r.w, r.h, c); }
 
+UiStuff* create_ui_stuff(size_t screen_width, size_t screen_height){
+  UiStuff* ui_stuff = (UiStuff*)malloc(sizeof(UiStuff));
+  // init part
+  ui_stuff->screen = LoadRenderTexture(screen_width, screen_height);
+  return ui_stuff;
+}
+
 void ui_stuff_clear(UiStuff* ui_stuff) {
   free(ui_stuff);
   return;
