@@ -164,20 +164,77 @@ void update_means(void)
     }
 }
 
+void print_array(float **array)
+{
+    for (size_t i = 0; i < arrlen(array); ++i) {
+        for (size_t j = 0; j < arrlen(array[i]); ++j) {
+            printf("%f ,", array[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 int main(void)
 {
-    const char *leaf_path = "../leaf/leaf.csv";
-    char *data = NULL;
-    size_t data_size = 0;
+    const char *leaf_path = "../test.csv";
+    //char *data = NULL;
+    //size_t data_size = 0;
 
-    if (read_entire_file(leaf_path, (void**)&data, &data_size)) return 1;
+    //if (read_entire_file(leaf_path, (void**)&data, &data_size)) return 1;
+
+    FILE *file_handler = fopen(leaf_path, "r");
+    char *char_in_row = NULL; //1 char
+    char *float_char = NULL;
+    float *data_in_row = NULL;
+    float **all_data = NULL;
+
+    while (true) {
+        char buf[2] = {0};
+        fgets(buf, 2, file_handler);
+        buf[1] = 0;
+        if (!(buf[0] == '\n' || buf[0] == '\0')) {
+            arrput(char_in_row, buf[0]);
+        } else {
+            for (size_t i = 0; i < arrlen(char_in_row); ++i) {
+                if (char_in_row[i] != ',') { // ['0 ', '.', '1','2' , ',' ...]
+                    arrput(float_char, char_in_row[i]);
+                }
+                else { // float_char ['0','.','1','2',0]
+                    arrput(float_char, 0);
+                    float value = atof(float_char);
+                    arrput(data_in_row, value);
+                    arrfree(float_char);
+                }
+            }
+            // take last values add to data_in_row (no comma issue)
+            arrput(float_char, 0);
+            float value = atof(float_char);
+            arrput(data_in_row, value);
+            arrfree(float_char);
+            // add data_in_ow to all_data
+            arrput(all_data, data_in_row);
+            arrfree(char_in_row);
+            char_in_row = NULL;
+            data_in_row = NULL;
+            // check if EOF
+            if (buf[0] == '\0') { // EOF => '\0'
+                break;
+            }
+       }
+   }
+   printf("arrlen(all_data): %d, arrlen(all_data[0])= %d\n", arrlen(all_data), arrlen(all_data[0]));
+   print_array(all_data);
+
+
+
+
     srand(time(0));
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    /*SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "k-means");
 
-    generate_new_state();
+    generate_new_state();*/
 
-    while (!WindowShouldClose()) {
+    /*while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
             generate_new_state();
             recluster_state();
@@ -204,6 +261,6 @@ int main(void)
         }
         EndDrawing();
     }
-    CloseWindow();
+    CloseWindow();*/
     return 0;
 }
