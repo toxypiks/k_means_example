@@ -22,6 +22,19 @@
 
 #define ARRAY_LEN(xs) sizeof(xs)/sizeof(xs[0])
 
+typedef struct Limits {
+    float min_x, max_x, min_y, max_y;
+} Limits;
+
+typedef struct Data {
+    Vector2* points;
+    Limits limits;
+} Data;
+
+typedef struct KMeansParams {
+    size_t num_cluster;
+} KMeansParams;
+
 int read_entire_file(const char *file_path, void **data, size_t *data_size)
 {
     int fd = 0;
@@ -79,57 +92,60 @@ Vector2 *set = NULL;
 static Vector2 *clusters[K] = {0};
 static Vector2 means[K] = {0};
 
-void generate_new_state(void)
+void generate_new_data(Data** data, Limits limits)
 {
-    arrsetlen(set, 0);
+    data = malloc(sizeof(Data));
+    data.limits = limits;
+    arrsetlen(data->points, 0);
     // generate random clusters for drawing
-    generate_cluster(CLITERAL(Vector2){0}, 10, 100, &set);
-    generate_cluster(CLITERAL(Vector2){MIN_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
-    generate_cluster(CLITERAL(Vector2){MAX_X*0.5f, MAX_Y*0.5f}, 5, 50, &set);
+    generate_cluster(CLITERAL(Vector2){0}, 10, 100, &(data->points));
+    generate_cluster(CLITERAL(Vector2){limits.min_x*0.5f, limits.max_y*0.5f}, 5, 50, &(data->points));
+    generate_cluster(CLITERAL(Vector2){limits.max_x*0.5f, limits.max_y*0.5f}, 5, 50, &(data->points));
+}
 
+void kmeans_init(KMeansParams params, Limits limits) {
     for (size_t i = 0; i < K; ++i) {
-        means[i].x = Lerp(MIN_X, MAX_X, rand_float());
-        means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
+        means[i].x = Lerp(limits.min_x, limits.max_x, rand_float());
+        means[i].y = Lerp(limits.min_y, limits.max_y, rand_float());
     }
 
 }
-
-void recluster_state(void)
+void recluster_state(KMeansState* state, KMeansParams* params, Data* data)
 {
-    for (size_t j = 0; j < K; ++j) {
-        arrsetlen(clusters[j], 0);
+    for (size_t j = 0; j < params->num_cluster; ++j) {
+        arrsetlen(state->cluster_points[j], 0);
     }
 
-    for (size_t i = 0; i < arrlen(set); ++i) {
-        Vector2 p = set[i];
+    for (size_t i = 0; i < arrlen(data->points); ++i) {
+        Vector2 p = data->points[i];
         int k = -1;
         float s = FLT_MAX;
-        for (size_t j = 0; j < K; ++j) {
-            Vector2 m = means[j];
+        for (size_t j = 0; j < params->num_cluster; ++j) {
+            Vector2 m = state->cendroids[j];
             float sm = Vector2LengthSqr(Vector2Subtract(p, m));
             if (sm < s) {
                 s = sm;
                 k = j;
             }
         }
-        arrput(clusters[k], p);
+        arrput(state->cluster_points[k], p);
     }
 }
 
-void update_means(void)
+void update_means(KMeansState* state, KMeansParams* params, Data* data)
 {
-    for (size_t i = 0; i < K; ++i) {
-        if (arrlen(clusters[i]) > 0) {
-            means[i] = Vector2Zero();
-            for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
-                means[i] = Vector2Add(means[i], clusters[i][j]);
+    for (size_t i = 0; i < params->num_cluster; ++i) {
+        if (arrlen(state->cluster_points[i]) > 0) {
+            state->cendroids[i] = Vector2Zero();
+            for (size_t j = 0; j < arrlen(state->cluster_points[i]); ++j) {
+                state->cendroids[i] = Vector2Add(state->cendroids[i], state->cluster_points[i][j]);
             }
-            means[i].x /= arrlen(clusters[i]);
-            means[i].y /= arrlen(clusters[i]);
+            state->cendroids[i].x /= arrlen(state->cluster_points[i]);
+            state->cendroids[i].y /= arrlen(state->cluster_points[i]);
         } else {
             // if cluster is empty just regenerate mean
-            means[i].x = Lerp(MIN_X, MAX_X, rand_float());
-            means[i].y = Lerp(MIN_Y, MAX_Y, rand_float());
+            state->cendroids[i].x = Lerp(data->limits.min_x, data->limits.max_x, rand_float());
+            state->cendroids[i].y = Lerp(data->limits.min_y, data->limits.max_y, rand_float());
         }
     }
 }
