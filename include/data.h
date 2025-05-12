@@ -5,18 +5,17 @@
 #include <stddef.h>
 
 typedef struct Limits {
-  float min_x;
-  float max_x;
-  float min_y;
-  float max_y;
+    float min_x, max_x, min_y, max_y;
 } Limits;
 
 typedef struct Data {
-  Vector2* samples;
-  Vector2* centroids;
+    Vector2* points;
+    Limits limits;
 } Data;
 
-void gen_data(Data** data, size_t num_samples, size_t num_centroids, Limits limits);
+void data_create(Data** data, Limits limits);
 void free_data(Data** data);
+// function to return float number between 0 and 1
+float rand_float(void);
 
 #endif // DATA_H_

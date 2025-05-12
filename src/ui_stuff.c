@@ -119,13 +119,14 @@ static Vector2 project_sample_to_screen(UiRect r, Vector2 sample, Limits limits)
     };
 }
 
-void cluster_widget(UiRect r, Vector2 *set, Vector2 *clusters[], Vector2 means[], Limits limits)
+void cluster_widget(UiRect r, Vector2 *set, Vector2 **clusters, Vector2* means, Limits limits)
 {
     for (size_t i = 0; i < arrlen(set); ++i) {
         Vector2 it = set[i];
         DrawCircleV(project_sample_to_screen(r, it, limits), SAMPLE_RADIUS, LIGHTGRAY);
     }
-    for (size_t i = 0; i < 3; ++i) {
+    // to change hardcoded cluster size
+    for (size_t i = 0; i < arrlen(clusters); ++i) {
         Color color = colors[i%(ARRAY_LEN(colors))];
 
         for (size_t j = 0; j < arrlen(clusters[i]); ++j) {
