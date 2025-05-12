@@ -125,7 +125,6 @@ void cluster_widget(UiRect r, Vector2 *set, Vector2 **clusters, Vector2* means, 
         Vector2 it = set[i];
         DrawCircleV(project_sample_to_screen(r, it, limits), SAMPLE_RADIUS, LIGHTGRAY);
     }
-    // to change hardcoded cluster size
     for (size_t i = 0; i < arrlen(clusters); ++i) {
         Color color = colors[i%(ARRAY_LEN(colors))];
 
@@ -133,8 +132,10 @@ void cluster_widget(UiRect r, Vector2 *set, Vector2 **clusters, Vector2* means, 
             Vector2 it = clusters[i][j];
             DrawCircleV(project_sample_to_screen(r, it, limits), SAMPLE_RADIUS, color);
         }
-
-        DrawCircleV(project_sample_to_screen(r, means[i], limits), MEAN_RADIUS, color);
+    }
+    for (size_t j = 0; j < arrlen(means); ++j) {
+        Color color = colors[j%(ARRAY_LEN(colors))];
+        DrawCircleV(project_sample_to_screen(r, means[j], limits), MEAN_RADIUS, color);
     }
 }
 
