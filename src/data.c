@@ -35,6 +35,7 @@ void data_create(Data** data, Limits limits)
 {
     (*data) = malloc(sizeof(Data));
     (*data)->limits = limits;
+    (*data)->points = NULL;
     arrsetlen((*data)->points, 0);
     // generate random clusters for drawing
     generate_cluster(CLITERAL(Vector2){0}, 10, 100, &((*data)->points));

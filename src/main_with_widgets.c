@@ -29,7 +29,7 @@ typedef struct KMeansParams {
 } KMeansParams;
 
 typedef struct KMeansState {
-  Vector2* cendroids;
+  Vector2* centroids;
   Vector2** cluster_points;
 } KMeansState;
 
@@ -68,17 +68,31 @@ int read_entire_file(const char *file_path, void **data, size_t *data_size)
 
 void kmeans_state_create(KMeansState **state, KMeansParams params, Limits limits) {
     (*state) = malloc(sizeof(KMeansState));
+    (*state)->centroids = NULL;
+    (*state)->cluster_points = NULL;
     for (size_t i = 0; i < params.num_cluster; ++i) {
-        Vector2 new_cendroid = {
+        Vector2 new_centroid = {
             .x = Lerp(limits.min_x,
                       limits.max_x,
                       rand_float()),
             .y = Lerp(limits.min_y,
                       limits.max_y,
                       rand_float())
-        };
-        arrput((*state)->cendroids, new_cendroid);
+                  };
+         arrput((*state)->centroids, new_centroid);
+         arrput((*state)->cluster_points, NULL);
     }
+}
+
+void kmeans_free(KMeansState **state)
+{
+    arrfree((*state)->centroids);
+    for (size_t i = 0; i < arrlen((*state)->cluster_points); ++i) {
+        arrfree((*state)->cluster_points[i]);
+    }
+    arrfree((*state)->cluster_points);
+    free(*state);
+    (*state) = NULL;
 }
 
 void recluster_state(KMeansState* state, KMeansParams* params, Data* data)
@@ -92,7 +106,7 @@ void recluster_state(KMeansState* state, KMeansParams* params, Data* data)
         int k = -1;
         float s = FLT_MAX;
         for (size_t j = 0; j < params->num_cluster; ++j) {
-            Vector2 m = state->cendroids[j];
+            Vector2 m = state->centroids[j];
             float sm = Vector2LengthSqr(Vector2Subtract(p, m));
             if (sm < s) {
                 s = sm;
@@ -107,16 +121,16 @@ void update_means(KMeansState* state, KMeansParams* params, Data* data)
 {
     for (size_t i = 0; i < params->num_cluster; ++i) {
         if (arrlen(state->cluster_points[i]) > 0) {
-            state->cendroids[i] = Vector2Zero();
+            state->centroids[i] = Vector2Zero();
             for (size_t j = 0; j < arrlen(state->cluster_points[i]); ++j) {
-                state->cendroids[i] = Vector2Add(state->cendroids[i], state->cluster_points[i][j]);
+                state->centroids[i] = Vector2Add(state->centroids[i], state->cluster_points[i][j]);
             }
-            state->cendroids[i].x /= arrlen(state->cluster_points[i]);
-            state->cendroids[i].y /= arrlen(state->cluster_points[i]);
+            state->centroids[i].x /= arrlen(state->cluster_points[i]);
+            state->centroids[i].y /= arrlen(state->cluster_points[i]);
         } else {
             // if cluster is empty just regenerate mean
-            state->cendroids[i].x = Lerp(data->limits.min_x, data->limits.max_x, rand_float());
-            state->cendroids[i].y = Lerp(data->limits.min_y, data->limits.max_y, rand_float());
+            state->centroids[i].x = Lerp(data->limits.min_x, data->limits.max_x, rand_float());
+            state->centroids[i].y = Lerp(data->limits.min_y, data->limits.max_y, rand_float());
         }
     }
 }
@@ -154,6 +168,8 @@ int main(void)
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
+            kmeans_free(&kmeans_state);
+            kmeans_state_create(&kmeans_state, params, limits);
             free_data(&data);
             data_create(&data, limits);
         }
@@ -167,7 +183,7 @@ int main(void)
         layout_stack_push(&ls, LO_VERT, ui_rect(0, 0, w, h), 2, 0);
         layout_stack_push(&ls, LO_HORZ, layout_stack_slot(&ls), 2, 0);
         widget(layout_stack_slot(&ls), PINK);
-        cluster_widget(layout_stack_slot(&ls), data->points, kmeans_state->cluster_points, kmeans_state->cendroids, limits);
+        cluster_widget(layout_stack_slot(&ls), data->points, kmeans_state->cluster_points, kmeans_state->centroids, limits);
         EndDrawing();
     }
     CloseWindow();
