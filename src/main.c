@@ -23,6 +23,16 @@
 
 #define ARRAY_LEN(xs) sizeof(xs)/sizeof(xs[0])
 
+void print_array(float **array)
+{
+    for (size_t i = 0; i < arrlen(array); ++i) {
+        for (size_t j = 0; j < arrlen(array[i]); ++j) {
+            printf("%f\n", array[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 int read_entire_file(const char *file_path, void **data, size_t *data_size)
 {
     int fd = 0;
@@ -54,6 +64,74 @@ int read_entire_file(const char *file_path, void **data, size_t *data_size)
     printf("read_bytes: %zu\n", read_bytes);
 
     if (fp) fclose(fp);
+}
+
+void read_csv_file(const char *file_path, void ***all_data, size_t *data_size)
+{
+    int fd = 0;
+    struct stat statbuf = {0};
+
+    fd = open(file_path, O_RDONLY, S_IRUSR | S_IRGRP);
+    if (fd == -1)
+    {
+        printf("failed to open %s\n", file_path);
+        exit(EXIT_FAILURE);
+    }
+
+    if (fstat(fd, &statbuf) == -1)
+    {
+        printf("failed to fstat %s\n", file_path);
+        exit(EXIT_FAILURE);
+    }
+
+    *data_size = statbuf.st_size;
+    if (close(fd) == -1)
+    {
+        printf("failed to fclose %s\n", file_path);
+        exit(EXIT_FAILURE);
+    }
+    FILE *file_handler = fopen(file_path, "r");
+
+    char *char_in_row = NULL; // 1 char
+    char *float_char = NULL;
+    float *data_in_row = NULL;
+
+    while (true) {
+        char buf[2] = {0};
+        fgets(buf, 2, file_handler);
+        buf[1] = 0;
+        if (!(buf[0] == '\n' || buf[0] == '\0')) {
+            arrput(char_in_row, buf[0]);
+        } else {
+            for (size_t i = 0; i < arrlen(char_in_row); ++i) {
+                if (char_in_row[i] != ',') { // ['0 ', '.', '1','2' , ',' ...]
+                    arrput(float_char, char_in_row[i]);
+                }
+                else { // float_char ['0','.','1','2',0]
+                    arrput(float_char, 0);
+                    float value = atof(float_char);
+                    arrput(data_in_row, value);
+                    arrfree(float_char);
+                }
+            }
+            // take last values add to data_in_row (no comma issue)
+            arrput(float_char, 0);
+            float value = atof(float_char);
+            arrput(data_in_row, value);
+            arrfree(float_char);
+            // add data_in_row to all_data
+            arrput(*all_data, data_in_row);
+            arrfree(char_in_row);
+            arrfree(data_in_row);
+            char_in_row = NULL;
+            data_in_row = NULL;
+            // check if EOF
+            if (buf[0] == '\0') { // EOF => '\0'
+                break;
+            }
+       }
+   }
+   if (file_handler) fclose(file_handler);
 }
 
 // function to map sample value to screen
@@ -164,69 +242,15 @@ void update_means(void)
     }
 }
 
-void print_array(float **array)
-{
-    for (size_t i = 0; i < arrlen(array); ++i) {
-        for (size_t j = 0; j < arrlen(array[i]); ++j) {
-            printf("%f ,", array[i][j]);
-        }
-        printf("\n");
-    }
-}
-
 int main(void)
 {
-    const char *leaf_path = "../test.csv";
-    //char *data = NULL;
-    //size_t data_size = 0;
+    const char *leaf_path = "../leaf/leaf.csv";
 
-    //if (read_entire_file(leaf_path, (void**)&data, &data_size)) return 1;
-
-    FILE *file_handler = fopen(leaf_path, "r");
-    char *char_in_row = NULL; //1 char
-    char *float_char = NULL;
-    float *data_in_row = NULL;
     float **all_data = NULL;
-
-    while (true) {
-        char buf[2] = {0};
-        fgets(buf, 2, file_handler);
-        buf[1] = 0;
-        if (!(buf[0] == '\n' || buf[0] == '\0')) {
-            arrput(char_in_row, buf[0]);
-        } else {
-            for (size_t i = 0; i < arrlen(char_in_row); ++i) {
-                if (char_in_row[i] != ',') { // ['0 ', '.', '1','2' , ',' ...]
-                    arrput(float_char, char_in_row[i]);
-                }
-                else { // float_char ['0','.','1','2',0]
-                    arrput(float_char, 0);
-                    float value = atof(float_char);
-                    arrput(data_in_row, value);
-                    arrfree(float_char);
-                }
-            }
-            // take last values add to data_in_row (no comma issue)
-            arrput(float_char, 0);
-            float value = atof(float_char);
-            arrput(data_in_row, value);
-            arrfree(float_char);
-            // add data_in_ow to all_data
-            arrput(all_data, data_in_row);
-            arrfree(char_in_row);
-            char_in_row = NULL;
-            data_in_row = NULL;
-            // check if EOF
-            if (buf[0] == '\0') { // EOF => '\0'
-                break;
-            }
-       }
-   }
-   printf("arrlen(all_data): %d, arrlen(all_data[0])= %d\n", arrlen(all_data), arrlen(all_data[0]));
-   print_array(all_data);
-
-
-
+    size_t data_size = 0;
+    read_csv_file(leaf_path, (void***)&all_data, &data_size);
+    //printf("size: %f\n", sizeof(all_data));
+    print_array(all_data);
 
     srand(time(0));
     /*SetConfigFlags(FLAG_WINDOW_RESIZABLE);
