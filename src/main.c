@@ -122,7 +122,6 @@ void read_csv_file(const char *file_path, void ***all_data, size_t *data_size)
             // add data_in_row to all_data
             arrput(*all_data, data_in_row);
             arrfree(char_in_row);
-            arrfree(data_in_row);
             char_in_row = NULL;
             data_in_row = NULL;
             // check if EOF
